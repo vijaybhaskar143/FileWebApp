@@ -1,4 +1,4 @@
-# File Web Application
+# File Explorer Web Application
 
    File Application is an ASP.NET AJAX application that lets the user upload, store, browse, and copy folders and files on a web server.
 
@@ -37,16 +37,11 @@ The application should support the following functionality:
 
 - - - -
 
-- [x] A completed task
+- [ ] Uncompleted tasks
 ```python
-  As a File Web Application, by using the telerik File Explorer werb control, i had accomplished it by integrating with SQL Server and done the part.
-```
-- [ ] An uncompleted task
-```python
-  Unfortunately due to not getting enough time to build the actual design requirements which are expecting to seperate the 
-  business logic from UI. I had tried to seperate out the business models (data access layer) out and tried to create some models to make use of those
-  in UI layer to get the data. But unfortunately most of the UI models are tightly bind with the telerik UI tools, so to convert 
-  our DAL layer model to UI layer telerik model, i faced difficulties and as i mentioned couldn't get enough time to build that part.
+  -> Copying the folder or files within the same folder. (Copy from files from one directory to another is working).
   
-  Initially I spent time to figure it out to store the folder and file storage mechanism in different areas like Azure Blob Storage and SQL Server FileTable etc.,
+  -> Folder metadata (Consolidated files size under the folder)
+  
+  -> Left side tree will not display the files under the folder (Files will be displayed in the Right side panel grid)
 ```
