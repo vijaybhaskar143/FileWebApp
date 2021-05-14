@@ -1,7 +1,6 @@
 # File Web Application
 
    File Application is an ASP.NET AJAX application that lets the user upload, store, browse, and copy folders and files on a web server.
-The application should support the following functionality:
 
 ## Technical Specifications
   
@@ -13,6 +12,7 @@ The application should support the following functionality:
 ## Features
 
    File Application is an ASP.NET AJAX application that lets the user upload, store, browse, and copy folders and files on a web server.
+   
 The application should support the following functionality:
 
 
