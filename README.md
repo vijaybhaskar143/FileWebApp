@@ -39,7 +39,7 @@ The application should support the following functionality:
 
 - [x] A completed task
 ```python
-  As a File Web Application, by using the telerik File Explorer tool, i had integrated with SQL Server and done the part.
+  As a File Web Application, by using the telerik File Explorer werb control, i had accomplished it by integrating with SQL Server and done the part.
 ```
 - [ ] An uncompleted task
 ```python
@@ -47,4 +47,6 @@ The application should support the following functionality:
   business logic from UI. I had tried to seperate out the business models (data access layer) out and tried to create some models to make use of those
   in UI layer to get the data. But unfortunately most of the UI models are tightly bind with the telerik UI tools, so to convert 
   our DAL layer model to UI layer telerik model, i faced difficulties and as i mentioned couldn't get enough time to build that part.
+  
+  Initially I spent time to figure it out to store the folder and file storage mechanism in different areas like Azure Blob Storage and SQL Server FileTable etc.,
 ```
