@@ -9,17 +9,6 @@ using Telerik.Web.UI.Widgets;
 
 public partial class FileManagement : System.Web.UI.Page
 {
-    static bool _isSqlTypesLoaded = false;
-
-    public FileManagement()
-    {
-        //if (!_isSqlTypesLoaded)
-        //{
-        //    SqlServerTypes.Utilities.LoadNativeAssemblies(Server.MapPath("~/"));
-        //    _isSqlTypesLoaded = true;
-        //}
-
-    }
     protected void Page_Load(object sender, EventArgs e)
     {
         FileExplorer1.Configuration.SearchPatterns = new string[] { "*.jpg", "*.jpeg", "*.gif", "*.png", "*.pdf", "*.doc", "*.docx" };
@@ -31,18 +20,21 @@ public partial class FileManagement : System.Web.UI.Page
         // Sets Max file size
         FileExplorer1.Configuration.MaxUploadFileSize = 10485760;
 
+        //Asynchronous Upload Enablement
         FileExplorer1.Configuration.EnableAsyncUpload = true;
 
+        //ViewMode to display folder at left side and content in right side grid
         FileExplorer1.ExplorerMode = Telerik.Web.UI.FileExplorer.FileExplorerMode.Default;
 
         // Enables Paging on the Grid
         FileExplorer1.AllowPaging = true;
+
         // Sets the page size
         FileExplorer1.PageSize = 20;
 
         //Load the default FileSystemContentProvider
         FileExplorer1.Configuration.ContentProviderTypeName =
-            typeof(DBContentProvider).AssemblyQualifiedName;
+            typeof(FileContentProvider).AssemblyQualifiedName;
 
     }
 }

@@ -13,7 +13,7 @@ namespace DataAccessLayer
 		private readonly char pathSeparator;
 
 		private DataTable _data;
-		private DataTable Data
+		public DataTable Data
 		{
 			get
 			{
@@ -34,7 +34,6 @@ namespace DataAccessLayer
 			}
 		}
 
-		//FileType, IsDirectory, [FileSize], FileContent
 
 		public DataBaseDataServer(string connectionString) : this(connectionString, '/') { }
 		public DataBaseDataServer(string connectionString, char pathSeparator)
@@ -48,36 +47,17 @@ namespace DataAccessLayer
 			return new SqlConnection(connectionString);
 		}
 
-		public void UpdateItem(string path, string newPath)
-		{
-			string oldName = this.GetName(path);
-			string newName = this.GetName(newPath);
-
-
-			int itemId = (int)GetItemIdFromPath(path);
-
-			if (oldName == newName) //move
-			{
-				DataRow newParent = this.GetParentFromPath(newPath);
-				this.UpdateItem(itemId, new string[] { "ParentID" }, new string[] { newParent["ItemID"].ToString() });
-			}
-			else //rename
-			{
-				this.UpdateItem(itemId, new string[] { "Name" }, new string[] { newName });
-			}
-		}
-
-		public DataRow GetItem(string path)
-		{
-			return this.GetItemRowFromPath(path);
-		}
-
-		private void UpdateItem(int itemId, string[] fields, string[] values)
+        #region UpdateItem
+        private string TrimSeparator(string path)
+        {
+            return path.Trim(this.pathSeparator);
+        }
+        public void UpdateItem(int itemId, string[] fields, string[] values)
 		{
 			if (fields.Length != values.Length)
 				return;
 
-			string updateCommandStr = "UPDATE [Items] SET";
+			string updateCommandStr = "UPDATE [FilesData] SET";
 			for (int i = 0; i < fields.Length; i++)
 			{
 				updateCommandStr += String.Format(" [{0}]='{1}'", fields[i], values[i]);
@@ -97,15 +77,67 @@ namespace DataAccessLayer
 				this._data = null; //force update
 			}
 		}
+		#endregion
 
-		private DataRow GetParentFromPath(string path)
+		#region DeletingItem
+		public void DeleteItem(string path)
 		{
-			string parentPath = path.Substring(0, TrimSeparator(path).LastIndexOf(pathSeparator));
+			SqlConnection connection = this.GetConnection(this.connectionString);
 
-			return this.GetItemRowFromPath(parentPath);
+			using (connection)
+			{
+				connection.Open();
+
+				SqlCommand command = new SqlCommand(String.Format("DELETE FROM [FilesData] WHERE ItemID = {0}", GetItemIdFromPath(path)), connection);
+				command.ExecuteNonQuery();
+
+				this._data = null;
+			}
 		}
+        #endregion
 
-		private int[] ConvertPathToIds(string path)
+        #region CreateDirectory
+        public string AddDirectory(string name, int parentId)
+        {
+            return this.AddItem(name, parentId, String.Empty, 1, 0, new byte[0]);
+        }
+        private int? GetItemIdFromPath(string path)
+        {
+            int[] ancestors = this.ConvertPathToIds(path);
+
+            return ancestors != null && ancestors.Length > 0 ? (int?)ancestors[ancestors.Length - 1] : null;
+        }
+        public string AddItem(string name, int parentId, string mimeType, int isDirectory, long size, byte[] content)
+		{
+			try
+			{
+				SqlConnection connection = this.GetConnection(this.connectionString);
+
+				SqlCommand command =
+					new SqlCommand(
+						"INSERT INTO FilesData ([Name], ParentId, FileType, IsDirectory, [FileSize], FileContent) VALUES (@Name, @ParentId, @FileType, @IsDirectory, @FileSize, @FileContent)", connection);
+				command.Parameters.Add(new SqlParameter("@Name", name));
+				command.Parameters.Add(new SqlParameter("@ParentId", parentId));
+				command.Parameters.Add(new SqlParameter("@FileType", mimeType));
+				command.Parameters.Add(new SqlParameter("@IsDirectory", isDirectory));
+				command.Parameters.Add(new SqlParameter("@FileSize", size));
+				command.Parameters.Add(new SqlParameter("@FileContent", content));
+
+				using (connection)
+				{
+					connection.Open();
+					command.ExecuteNonQuery();
+					this._data = null; //force update
+				}
+
+				return String.Empty;
+			}
+			catch (Exception e)
+			{
+				return e.Message;
+			}
+		}
+		public int[] ConvertPathToIds(string path)
 		{
 			path = this.TrimSeparator(path);
 			string[] names = path.Split('/');
@@ -128,80 +160,17 @@ namespace DataAccessLayer
 
 			return names.Length == result.Count ? result.ToArray() : null;
 		}
+		#endregion
 
-		private DataRow GetItemRowFromPath(string path)
-		{
-			int? itemId = GetItemIdFromPath(path);
-			if (itemId == null) return null;
-
-			DataRow[] result = this.Data.Select(String.Format("ItemID = {0}", itemId), "[Name]");
-			return result.Length > 0 ? result[0] : null;
-		}
-
-		private int? GetItemIdFromPath(string path)
-		{
-			int[] ancestors = this.ConvertPathToIds(path);
-
-			return ancestors != null && ancestors.Length > 0 ? (int?)ancestors[ancestors.Length - 1] : null;
-		}
-
-		public void DeleteItem(string path)
-		{
-			SqlConnection connection = this.GetConnection(this.connectionString);
-
-			using (connection)
-			{
-				connection.Open();
-
-				SqlCommand command = new SqlCommand(String.Format("DELETE FROM [Items] WHERE ItemID = {0}", GetItemIdFromPath(path)), connection);
-				command.ExecuteNonQuery();
-
-				this._data = null;
-			}
-		}
-
-		private string AddItem(string name, int parentId, string mimeType, int isDirectory, long size, byte[] content)
-		{
-			try
-			{
-				SqlConnection connection = this.GetConnection(this.connectionString);
-
-				SqlCommand command =
-					new SqlCommand(
-						"INSERT INTO Items ([Name], ParentId, FileType, IsDirectory, [FileSize], FileContent) VALUES (@Name, @ParentId, @FileType, @IsDirectory, @FileSize, @FileContent)", connection);
-				command.Parameters.Add(new SqlParameter("@Name", name));
-				command.Parameters.Add(new SqlParameter("@ParentId", parentId));
-				command.Parameters.Add(new SqlParameter("@FileType", mimeType));
-				command.Parameters.Add(new SqlParameter("@IsDirectory", isDirectory));
-				command.Parameters.Add(new SqlParameter("@FileSize", size));
-				command.Parameters.Add(new SqlParameter("@FileContent", content));
-
-				using (connection)
-				{
-					connection.Open();
-					command.ExecuteNonQuery();
-					this._data = null; //force update
-				}
-
-				return String.Empty;
-			}
-			catch (Exception e)
-			{
-				return e.Message;
-			}
-		}
-
-		private string AddDirectory(string name, int parentId)
-		{
-			return this.AddItem(name, parentId, String.Empty, 1, 0, new byte[0]);
-		}
-
-		private string AddFile(string name, int parentId, string mimeType, byte[] content)
+        #region StoreFile
+		public string AddFile(string name, int parentId, string mimeType, byte[] content)
 		{
 			return this.AddItem(name, parentId, mimeType, 0, content.LongLength, content);
 		}
+        #endregion
 
-		private void CopyItemInternal(string path, string newPath)
+        #region CopyItem
+		public void CopyItemInternal(string path, string newPath)
 		{
 			DataRow itemRow = this.GetItemRowFromPath(path);
 			DataRow parent = this.GetParentFromPath(newPath);
@@ -220,155 +189,27 @@ namespace DataAccessLayer
 			{
 				this.AddFile(itemRow["Name"].ToString(), (int)parent["ItemID"], itemRow["FileType"].ToString(), (byte[])itemRow["FileContent"]);
 			}
-		}
-
-		public void CopyItem(string path, string newPath)
-		{
-			this.CopyItemInternal(path, newPath);
 			this._data = null;
 		}
+        private DataRow GetParentFromPath(string path)
+        {
+            string parentPath = path.Substring(0, TrimSeparator(path).LastIndexOf(pathSeparator));
 
-		public string StoreFile(string name, string location, string contentType, byte[] content)
+            return this.GetItemRowFromPath(parentPath);
+        }
+        #endregion
+
+        #region SupportingMethods
+
+		public DataRow GetItemRowFromPath(string path)
 		{
-			DataRow parent = this.GetItemRowFromPath(location);
-			if (parent == null) return "Invalid location path.";
+			int? itemId = GetItemIdFromPath(path);
+			if (itemId == null) return null;
 
-			return AddFile(name, (int)parent["ItemID"], contentType, content);
+			DataRow[] result = this.Data.Select(String.Format("ItemID = {0}", itemId), "[Name]");
+			return result.Length > 0 ? result[0] : null;
 		}
-
-		public string CreateDirectory(string name, string location)
-		{
-			return this.AddDirectory(name, (int)this.GetItemIdFromPath(location));
-		}
-
-		public byte[] GetItemContent(string path)
-		{
-			DataRow item = this.GetItemRowFromPath(path);
-
-			return item != null ? (byte[])item["FileContent"] : null;
-		}
-
-		public string GetPath(string path)
-		{
-			DataRow item = this.GetItemRowFromPath(path);
-			if (item == null)
-				item = this.GetParentFromPath(path);
-
-			return Convert.ToInt32(item["IsDirectory"]) == 1 ? this.GetFullPath(item) : this.GetLoaction(item);
-		}
-
-		public string GetLocation(string path)
-		{
-			DataRow item = this.GetItemRowFromPath(path);
-
-			return this.GetLoaction(item);
-		}
-
-		private string GetLoaction(DataRow item)
-		{
-			if (String.IsNullOrEmpty(item["ParentID"].ToString()))
-			{
-				return String.Empty;
-			}
-
-			DataRow parentFolder = this.Data.Select(String.Format("ItemID = {0}", item["ParentID"].ToString()), "[Name]")[0];
-			return this.GetFullPath(parentFolder);
-		}
-
-		public FileItemModel GetFileItem(string path, string handlerPath)
-		{
-			DataRow item = this.GetItemRowFromPath(path);
-
-			return this.CreateFileItem(item, handlerPath);
-		}
-
-		public DirectoryItemModel GetDirectoryItem(string path, bool includeSubfolders)
-		{
-			DataRow item = this.GetItemRowFromPath(path);
-
-			return (item != null && Convert.ToInt32(item["IsDirectory"]) == 1) ? this.CreateDirectoryItem(item, includeSubfolders) : null;
-		}
-
-		private DirectoryItemModel CreateDirectoryItem(DataRow item, bool includeSubfolders)
-		{
-			DirectoryItemModel directory = new DirectoryItemModel(item["Name"].ToString(),
-														this.GetLoaction(item),
-														this.GetFullPath(item),
-														String.Empty,
-														PathPermissionsModel.Read, //correct permissions should be applied from the content provider
-														null,
-														null
-														);
-
-			if (includeSubfolders)
-			{
-				DataRow[] subDirItems = GetChildDirectories(item);
-				List<DirectoryItemModel> subDirs = new List<DirectoryItemModel>();
-
-				foreach (DataRow subDir in subDirItems)
-				{
-					subDirs.Add(CreateDirectoryItem(subDir, false));
-				}
-
-				directory.Directories = subDirs.ToArray();
-			}
-
-			return directory;
-		}
-
-		private DataRow[] GetChildDirectories(DataRow item)
-		{
-			return this.Data.Select(String.Format("ParentID = {0} AND IsDirectory = 1", item["ItemID"].ToString()), "[Name]");
-		}
-
-		public FileItemModel[] GetChildFiles(string folderPath, string[] searchPatterns, string handlerPath)
-		{
-			DataRow parentFolder = this.GetItemRowFromPath(folderPath);
-
-			DataRow[] fileRows = this.Data.Select(String.Format("ParentID = {0} AND IsDirectory = 0{1}", parentFolder["ItemID"].ToString(), this.GetSearchPatternsFilter(searchPatterns)), "[Name]");
-
-			List<FileItemModel> result = new List<FileItemModel>(fileRows.Length);
-			foreach (DataRow fileRow in fileRows)
-			{
-				result.Add(this.CreateFileItem(fileRow, handlerPath));
-			}
-
-			return result.ToArray();
-		}
-
-		private string GetSearchPatternsFilter(string[] searchPatterns)
-		{
-			if (Array.IndexOf(searchPatterns, "*.*") > -1)
-				return String.Empty;
-
-
-			string searchPatterntsFilterExpression = " AND (Name LIKE '%";
-			for (int i = 0; i < searchPatterns.Length; i++)
-			{
-				searchPatterntsFilterExpression += searchPatterns[i].Substring(searchPatterns[i].LastIndexOf('.'));
-				if (i < searchPatterns.Length - 1)
-					searchPatterntsFilterExpression += "' OR Name LIKE '%";
-				else
-					searchPatterntsFilterExpression += "')";
-			}
-
-			return searchPatterntsFilterExpression;
-		}
-
-		private FileItemModel CreateFileItem(DataRow item, string handlerPath)
-		{
-			string itemPath = this.GetFullPath(item);
-			return new FileItemModel(item["Name"].ToString(),
-								Path.GetExtension(itemPath),
-								Convert.ToInt64(item["FileSize"]),
-								itemPath,
-								GetItemUrl(itemPath, handlerPath),
-								String.Empty,
-								PathPermissionsModel.Read //correct permissions should be applied from the content provider
-								);
-		}
-
-		private string GetFullPath(DataRow item)
+		public string GetFullPath(DataRow item)
 		{
 			string path = item["Name"].ToString();
 			if (Convert.ToInt32(item["IsDirectory"]) == 1) path += this.pathSeparator;
@@ -386,29 +227,17 @@ namespace DataAccessLayer
 
 			return path;
 		}
-
-		private string GetItemUrl(string itemPath, string handlerPath)
+		public string GetLoaction(DataRow item)
 		{
-			string escapedPath = HttpUtility.UrlEncode(itemPath);
-			return string.Format("{0}?path={1}", handlerPath, escapedPath);
+			if (String.IsNullOrEmpty(item["ParentID"].ToString()))
+			{
+				return String.Empty;
+			}
+
+			DataRow parentFolder = this.Data.Select(String.Format("ItemID = {0}", item["ParentID"].ToString()), "[Name]")[0];
+			return this.GetFullPath(parentFolder);
 		}
 
-		public bool ItemExists(string path)
-		{
-			DataRow item = this.GetItemRowFromPath(path);
-			return !Object.Equals(item, null);
-		}
-
-		private string TrimSeparator(string path)
-		{
-			return path.Trim(this.pathSeparator);
-		}
-
-		private string GetName(string path)
-		{
-			string tmpPath = this.TrimSeparator(path);
-			return tmpPath.Substring(tmpPath.LastIndexOf(pathSeparator) + 1);
-		}
-
-	}
+        #endregion
+    }
 }

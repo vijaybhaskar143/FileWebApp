@@ -1,26 +1,28 @@
 ﻿using System;
 using System.Linq;
 using System.Web;
-
 using System.IO;
 using System.Drawing;
 using System.Drawing.Imaging;
 using Telerik.Web.UI;
 using Telerik.Web.UI.Widgets;
+using BusinessAccessLayer;
 
 /// <summary>
-/// Summary description for FileNewProvider
+/// Summary description for FileContentProvider
 /// </summary>
-public class DBContentProvider : Telerik.Web.UI.Widgets.FileBrowserContentProvider
+public class FileContentProvider : Telerik.Web.UI.Widgets.FileBrowserContentProvider
 {
-	private readonly DBDataServer dataServer;
 
+	private readonly FileManagementService fileService;
+	private readonly BusinessLogicalService dataServer;
 	private readonly string itemHandlerPath;
 
-	public DBContentProvider(HttpContext context, string[] searchPatterns, string[] viewPaths, string[] uploadPaths, string[] deletePaths, string selectedUrl, string selectedItemTag)
+	public FileContentProvider(HttpContext context, string[] searchPatterns, string[] viewPaths, string[] uploadPaths, string[] deletePaths, string selectedUrl, string selectedItemTag)
 		: base(context, searchPatterns, viewPaths, uploadPaths, deletePaths, selectedUrl, selectedItemTag)
 	{
-		this.dataServer = new DBDataServer(System.Configuration.ConfigurationManager.ConnectionStrings["TelerikConnectionString"].ConnectionString);
+		this.dataServer = new BusinessLogicalService(System.Configuration.ConfigurationManager.ConnectionStrings["TelerikConnectionString"].ConnectionString);
+		this.fileService = new FileManagementService(System.Configuration.ConfigurationManager.ConnectionStrings["TelerikConnectionString"].ConnectionString);
 		this.itemHandlerPath = System.Configuration.ConfigurationManager.AppSettings["Telerik.FileApp.ItemHandler"];
 		if (itemHandlerPath.StartsWith("~/"))
 		{
@@ -31,7 +33,7 @@ public class DBContentProvider : Telerik.Web.UI.Widgets.FileBrowserContentProvid
 	#region OVERRIDES
 	public override DirectoryItem ResolveRootDirectoryAsTree(string path)
 	{
-		DirectoryItem directory = dataServer.GetDirectoryItem(path, true);
+		DirectoryItem directory = fileService.GetDirectoryItem(path, true);
 
 		if (directory == null) return null;
 
@@ -46,12 +48,12 @@ public class DBContentProvider : Telerik.Web.UI.Widgets.FileBrowserContentProvid
 
 	public override DirectoryItem ResolveDirectory(string path)
 	{
-		DirectoryItem directory = dataServer.GetDirectoryItem(path, false);
+		DirectoryItem directory = fileService.GetDirectoryItem(path, false);
 
 		if (directory == null) return null;
 
 		directory.Permissions = GetPermissions(directory.Path);
-		directory.Files = dataServer.GetChildFiles(path, this.SearchPatterns, this.itemHandlerPath);
+		directory.Files = fileService.GetChildFiles(path, this.SearchPatterns, this.itemHandlerPath);
 		foreach (FileItem file in directory.Files)
 		{
 			file.Permissions = GetPermissions(file.Location);
@@ -144,6 +146,20 @@ public class DBContentProvider : Telerik.Web.UI.Widgets.FileBrowserContentProvid
 	}
 	public override string CopyFile(string path, string newPath)
 	{
+		//if (dataServer.ItemExists(newPath))
+		//{
+		//	var items = newPath.Split('/');
+		//	int itemLength = items.Length;
+		//	string newItemPath = string.Empty;
+		//	for(int i=0;i<itemLength;i++)
+        //  {
+		//		if (i == itemLength - 1)
+		//			items[i] = "Copy Of " + items[i];
+		//		newItemPath += items[i] + "/";
+        //  }
+		//	newPath = newItemPath;
+		//}
+			
 		if (!dataServer.ItemExists(newPath))
 		{
 			dataServer.CopyItem(path, newPath);

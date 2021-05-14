@@ -6,7 +6,7 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "FileWebApp", "FileWebApp\", "{21784717-5400-4CB8-98E3-94D9BE33D74D}"
 	ProjectSection(WebsiteProperties) = preProject
 		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.7.2"
-		ProjectReferences = "{7d3c53d1-add7-4d9d-9086-9adf83dd7722}|DataAccessLayer.dll;"
+		ProjectReferences = "{33393279-fa9b-4642-bda2-ff3d78e91ec0}|BusinessAccessLayer.dll;{7D3C53D1-ADD7-4D9D-9086-9ADF83DD7722}|DataAccessLayer.dll;"
 		Debug.AspNetCompiler.VirtualPath = "/localhost_64753"
 		Debug.AspNetCompiler.PhysicalPath = "FileWebApp\"
 		Debug.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_64753\"
@@ -28,6 +28,8 @@ Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "FileWebApp", "FileWebApp\",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataAccessLayer", "DataAccessLayer\DataAccessLayer.csproj", "{7D3C53D1-ADD7-4D9D-9086-9ADF83DD7722}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BusinessAccessLayer", "BusinessAccessLayer\BusinessAccessLayer.csproj", "{33393279-FA9B-4642-BDA2-FF3D78E91EC0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -42,6 +44,10 @@ Global
 		{7D3C53D1-ADD7-4D9D-9086-9ADF83DD7722}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7D3C53D1-ADD7-4D9D-9086-9ADF83DD7722}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7D3C53D1-ADD7-4D9D-9086-9ADF83DD7722}.Release|Any CPU.Build.0 = Release|Any CPU
+		{33393279-FA9B-4642-BDA2-FF3D78E91EC0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{33393279-FA9B-4642-BDA2-FF3D78E91EC0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{33393279-FA9B-4642-BDA2-FF3D78E91EC0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{33393279-FA9B-4642-BDA2-FF3D78E91EC0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

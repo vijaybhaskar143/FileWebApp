@@ -17,8 +17,7 @@
     <telerik:RadSkinManager ID="RadSkinManager1" runat="server" Skin="Windows7" ShowChooser="false" />
     <div class="demo-container size-medium">
         <telerik:RadFileExplorer RenderMode="Lightweight" runat="server" ID="FileExplorer1" 
-            Width="1000px" Height="600px" EnableCopy="true" style="top: 10px; left: 0px"
-            >
+            Width="1000px" Height="600px" EnableCopy="true" style="top: 10px; left: 0px">
         </telerik:RadFileExplorer>
     </div>
    </form>

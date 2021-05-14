@@ -5,16 +5,16 @@ public class Handler : IHttpHandler
 {
 	#region IHttpHandler Members
 
-	private DBDataServer dataServer;
-	private DBDataServer DataServer
+	private FileManagementService fileServer;
+	private FileManagementService FileServer
 	{
 		get
 		{
-			if (dataServer == null)
+			if (fileServer == null)
 			{
-				dataServer = new DBDataServer(System.Configuration.ConfigurationManager.ConnectionStrings["TelerikConnectionString"].ConnectionString);
+				fileServer = new FileManagementService(System.Configuration.ConfigurationManager.ConnectionStrings["TelerikConnectionString"].ConnectionString);
 			}
-			return dataServer;
+			return fileServer;
 		}
 	}
 
@@ -30,10 +30,10 @@ public class Handler : IHttpHandler
 		}
 		string path = Context.Server.UrlDecode(Context.Request.QueryString["path"]);
 
-		var item = DataServer.GetItem(path);
+		var item = FileServer.GetItem(path);
 		if (item == null) return;
 
-		WriteFile((byte[])item["Content"], item["Name"].ToString(), item["MimeType"].ToString(), context.Response);
+		WriteFile((byte[])item["FileContent"], item["Name"].ToString(), item["FileType"].ToString(), context.Response);
 	}
 
 	/// <summary>
